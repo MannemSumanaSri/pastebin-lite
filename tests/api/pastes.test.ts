@@ -94,8 +94,8 @@ describe("Pastes REST API", () => {
     expect(data.remainingViews).toBeNull();
   });
 
-  it("5. returns 404 when retrieving a nonexistent paste", async () => {
-    const [req, ctx] = createGetRequest("NonExistent12");
+it("5. returns 404 when retrieving a nonexistent paste", async () => {
+    const [req, ctx] = createGetRequest("NonExistent1");
     const res = await GET(req, ctx);
     expect(res.status).toBe(404);
     const json = await res.json();
@@ -131,9 +131,9 @@ describe("Pastes REST API", () => {
     expect(json.content).toBe("future paste");
   });
 
-  it("8. returns 410 for an already-expired paste and does not increment viewCount", async () => {
+it("8. returns 410 for an already-expired paste and does not increment viewCount", async () => {
     mockDb.seed({
-      id: "ExpiredPaste1",
+      id: "ExpiredPaste",
       content: "too late",
       createdAt: new Date(Date.now() - 120_000),
       expiresAt: new Date(Date.now() - 1_000),
@@ -141,12 +141,12 @@ describe("Pastes REST API", () => {
       viewCount: 0,
     });
 
-    const [req, ctx] = createGetRequest("ExpiredPaste1");
+    const [req, ctx] = createGetRequest("ExpiredPaste");
     const res = await GET(req, ctx);
     expect(res.status).toBe(410);
     const json = await res.json();
     expect(json.error).toMatch(/expired/i);
-    expect(mockDb.getRaw("ExpiredPaste1")?.viewCount).toBe(0);
+    expect(mockDb.getRaw("ExpiredPaste")?.viewCount).toBe(0);
   });
 
   it("9 & 10. enforces maximum view count and returns 410 once exhausted", async () => {

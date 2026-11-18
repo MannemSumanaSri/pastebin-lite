@@ -17,8 +17,15 @@ function matchesFilter(record: PasteRecord, filter: WhereFilter): boolean {
     return false;
   }
 
-  if (filter.expiresAt && typeof filter.expiresAt === "object" && filter.expiresAt.gt) {
-    if (!record.expiresAt || record.expiresAt.getTime() <= filter.expiresAt.gt.getTime()) {
+  if (
+    filter.expiresAt &&
+    typeof filter.expiresAt === "object" &&
+    filter.expiresAt.gt
+  ) {
+    if (
+      !record.expiresAt ||
+      record.expiresAt.getTime() <= filter.expiresAt.gt.getTime()
+    ) {
       return false;
     }
   }
@@ -101,7 +108,7 @@ export class InMemoryPasteDb implements PasteDbClient {
       return found ? { ...found } : null;
     },
 
-    updateMany: async ({
+    updateManyAndReturn: async ({
       where,
       data,
     }: {
@@ -111,17 +118,18 @@ export class InMemoryPasteDb implements PasteDbClient {
       if (this.forceError) {
         throw this.forceError;
       }
-      let count = 0;
+      const updated: PasteRecord[] = [];
       for (const [id, record] of this.store.entries()) {
         if (matchesFilter(record, where)) {
-          this.store.set(id, {
+          const nextRecord: PasteRecord = {
             ...record,
             viewCount: record.viewCount + data.viewCount.increment,
-          });
-          count += 1;
+          };
+          this.store.set(id, nextRecord);
+          updated.push({ ...nextRecord });
         }
       }
-      return { count };
+      return updated;
     },
   } as unknown as PasteDbClient["paste"];
 }
